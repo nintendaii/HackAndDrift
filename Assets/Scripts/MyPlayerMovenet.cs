@@ -1,29 +1,25 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using DefaultNamespace;
 using Helpers;
 using UnityEngine;
 
 public class MyPlayerMovenet : MonoBehaviour
 {
-    [SerializeField]
-    private float speed = 5f;
-    
-    [SerializeField]
-    private Rigidbody2D rigidbody2D;
+    private static readonly int Vertical = Animator.StringToHash("Vertical");
+    private static readonly int Horizontal = Animator.StringToHash("Horizontal");
+    private static readonly int Speed = Animator.StringToHash("Speed");
 
-    [SerializeField] 
-    private Animator animator;
+    [SerializeField] private float speed = 5f;
+
+    [SerializeField] private Rigidbody2D rigidbody2D;
+
+    [SerializeField] private Animator animator;
 
     [SerializeField] private float attackOffset = 4f;
     [SerializeField] private float attackRange = 4f;
 
     private Vector2 inputAxis;
     private State state;
-    private static readonly int Vertical = Animator.StringToHash("Vertical");
-    private static readonly int Horizontal = Animator.StringToHash("Horizontal");
-    private static readonly int Speed = Animator.StringToHash("Speed");
 
     private void Awake()
     {
@@ -66,11 +62,14 @@ public class MyPlayerMovenet : MonoBehaviour
         {
             var mousePosition = Utils.GetMouseWorldPosition();
             var mouseDir = (mousePosition - transform.position).normalized;
-            
+
             var attackPosition = transform.position + mouseDir * attackOffset;
             var attackDir = mouseDir;
-            
+
             Debug.DrawLine(transform.position, attackPosition, Color.red, 2f);
+            var vectorToCalc = attackPosition - transform.position;
+            var angle = Mathf.Atan2(vectorToCalc.y, vectorToCalc.x) * Mathf.Rad2Deg;
+            Debug.LogError($"Attack direction is {AttackAngleToDirection(angle)}");
 
             var targetEnemy = DefaultEnemyFactory.Instance.GetClosestEnemy(attackPosition, attackRange);
             if (targetEnemy != null)
@@ -78,13 +77,39 @@ public class MyPlayerMovenet : MonoBehaviour
                 targetEnemy.Damage();
                 attackDir = (targetEnemy.GetPosition() - transform.position).normalized;
             }
+
             var dashDistance = 2.1f;
             transform.position += attackDir * dashDistance;
             //state = PlayerState.Attack;
         }
     }
-    
-    
+
+    private AttackDirection AttackAngleToDirection(float angle)
+    {
+        switch (angle)
+        {
+            case var n when n >= -45 && n <= 45:
+                return AttackDirection.Right;
+            case var n when n <= 135 && n >= 45:
+                return AttackDirection.Top;
+            case var n when n <= 180 && n >= 135 || n >= -180 && n <= -135:
+                return AttackDirection.Left;
+            case var n when n >= -135 && n <= -45:
+                return AttackDirection.Bottom;
+            default:
+                return default;
+        }
+    }
+
+    private enum AttackDirection
+    {
+        Top,
+        Left,
+        Right,
+        Bottom
+    }
+
+
     private enum State
     {
         Normal,

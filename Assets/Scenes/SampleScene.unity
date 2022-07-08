@@ -1485,6 +1485,8 @@ MonoBehaviour:
   speed: 5
   rigidbody2D: {fileID: 1541514050}
   animator: {fileID: 1541514052}
+  attackOffset: 4
+  attackRange: 2
 --- !u!95 &1541514052
 Animator:
   serializedVersion: 3
